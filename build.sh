@@ -26,8 +26,8 @@ fi
 # Without it, the Dark icon style turns the flat icon above black. AppIcon.icns stays for macOS 14 and 15.
 if [ ! -f build/icon/Assets.car ] || [ -n "$(find Resources/AppIcon.icon -newer build/icon/Assets.car)" ]; then
     rm -rf build/icon && mkdir -p build/icon
-    xcrun actool Resources/AppIcon.icon --compile build/icon --platform macosx --minimum-deployment-target 14.0 \
-        --app-icon AppIcon --output-partial-info-plist build/icon/partial.plist >/dev/null
+    xcrun actool "$PWD/Resources/AppIcon.icon" --compile "$PWD/build/icon" --platform macosx --minimum-deployment-target 14.0 \
+        --app-icon AppIcon --output-partial-info-plist "$PWD/build/icon/partial.plist" >/dev/null
     rm build/icon/AppIcon.icns build/icon/partial.plist
 fi
 
