@@ -55,7 +55,6 @@ final class Workspace: ObservableObject {
 
     enum Sheet: String, Identifiable { case newTable, newView, backup, exportDatabase, snippets; var id: String { rawValue } }
     private var columnCache: [TableRef: [String]] = [:]
-    private var queryCount = 0
 
     init(session: Session, store: Store) {
         self.session = session
@@ -185,12 +184,23 @@ final class Workspace: ObservableObject {
             select(existing.id)
             if case .query(let q) = existing { return q }
         }
-        queryCount += 1
-        let tab = QueryTab(workspace: self, name: name ?? (queryCount == 1 ? "Query" : "Query \(queryCount)"), text: text)
+        let tab = QueryTab(workspace: self, name: name ?? nextQueryName(), text: text)
         tab.savedID = saved
         tabs.append(.query(tab))
         select(tab.id)
         return tab
+    }
+
+    /// "Query", then "Query 2", "Query 3"…: the lowest number no open query tab uses, so closing a tab frees its name.
+    private func nextQueryName() -> String {
+        let used = Set(tabs.compactMap { tab -> Int? in
+            guard case .query(let q) = tab else { return nil }
+            if q.name == "Query" { return 1 }
+            guard q.name.hasPrefix("Query ") else { return nil }
+            return Int(q.name.dropFirst(6))
+        })
+        let n = (1...).first { !used.contains($0) }!
+        return n == 1 ? "Query" : "Query \(n)"
     }
 
     func close(_ id: UUID) {

@@ -3,6 +3,10 @@
 Every release of Maben Base. The newest version is at the top. `publish.sh` uses the section for the version it
 releases as the GitHub release notes, and base.maben.gg/changelog is built from this file.
 
+## 0.2.1 · 19 November 2026
+
+- New query tabs take the lowest free number, so closing "Query 2" and opening a new one gives "Query 2" again instead of counting up
+
 ## 0.2 · 19 November 2026
 
 - The app icon stays pink with the Dark icon style on macOS 26 and later (it showed as a black square), with a pink mark on black in Dark and its own tinted and clear versions
