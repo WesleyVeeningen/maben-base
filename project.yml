@@ -20,6 +20,8 @@ targets:
       - path: Sources/Base
       - path: build/AppIcon.icns
         buildPhase: resources
+      - path: build/icon/Assets.car
+        buildPhase: resources
     settings:
       base:
         PRODUCT_NAME: Maben Base

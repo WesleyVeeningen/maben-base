@@ -22,6 +22,14 @@ if [ ! -f build/AppIcon.icns ] || [ Resources/make-icon.swift -nt build/AppIcon.
     done
     iconutil -c icns build/AppIcon.iconset -o build/AppIcon.icns
 fi
+# macOS 26 and later: the layered icon (pink in light, pink mark on black in dark, tinted and clear).
+# Without it, the Dark icon style turns the flat icon above black. AppIcon.icns stays for macOS 14 and 15.
+if [ ! -f build/icon/Assets.car ] || [ -n "$(find Resources/AppIcon.icon -newer build/icon/Assets.car)" ]; then
+    rm -rf build/icon && mkdir -p build/icon
+    xcrun actool Resources/AppIcon.icon --compile build/icon --platform macosx --minimum-deployment-target 14.0 \
+        --app-icon AppIcon --output-partial-info-plist build/icon/partial.plist >/dev/null
+    rm build/icon/AppIcon.icns build/icon/partial.plist
+fi
 
 APP="build/Maben Base.app"
 [ "$CONFIG" = "debug" ] && APP="build/demo/Maben Base.app"
@@ -30,7 +38,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Base"
 cp Info.plist "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(date +%Y%m%d%H%M%S)" "$APP/Contents/Info.plist"
-cp build/AppIcon.icns "$APP/Contents/Resources/"
+cp build/AppIcon.icns build/icon/Assets.car "$APP/Contents/Resources/"
 codesign --force --sign - "$APP" >/dev/null 2>&1 || true
 echo "Built $APP"
 
