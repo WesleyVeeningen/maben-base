@@ -110,16 +110,41 @@ function tlsOpts(config: ConnectionConfig) {
 
 async function openPostgres(config: ConnectionConfig, password: string, database?: string): Promise<import('pg').Client> {
   const { Client } = await import('pg')
-  const ssl = tlsOpts(config)
-  const client = new Client({
+  const base = {
     host: config.host,
     port: config.port,
     user: config.user || undefined,
     password: password || undefined,
     database: database || config.database || config.user || 'postgres',
-    ssl: ssl || undefined,
     connectionTimeoutMillis: 10000,
-  })
+  }
+
+  if (config.tls === 'off') {
+    const client = new Client({ ...base, ssl: false })
+    await client.connect()
+    return client
+  }
+
+  if (config.tls === 'prefer') {
+    // Try TLS first; if the server doesn't support it, fall back to plaintext.
+    try {
+      const client = new Client({ ...base, ssl: { rejectUnauthorized: false } })
+      await client.connect()
+      return client
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.toLowerCase().includes('ssl') || msg.includes('ECONNRESET')) {
+        const client = new Client({ ...base, ssl: false })
+        await client.connect()
+        return client
+      }
+      throw e
+    }
+  }
+
+  // require / verify
+  const ssl = config.tls === 'verify' ? { rejectUnauthorized: true } : { rejectUnauthorized: false }
+  const client = new Client({ ...base, ssl })
   await client.connect()
   return client
 }
